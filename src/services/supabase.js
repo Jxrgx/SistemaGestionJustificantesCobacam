@@ -1,7 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl  = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey  = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// .trim() previene errores silenciosos si hay espacios accidentales en .env.local
+const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL  ?? '').trim();
+const supabaseKey = (import.meta.env.VITE_SUPABASE_ANON_KEY ?? '').trim();
 
 if (!supabaseUrl || !supabaseKey) {
   console.warn(

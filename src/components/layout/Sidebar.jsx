@@ -1,13 +1,21 @@
-import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, FilePlus2, Users, GraduationCap } from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, FilePlus2, Users, GraduationCap, LogOut } from 'lucide-react';
+import { supabase } from '../../services/supabase';
 
 const navItems = [
-  { to: '/',                label: 'Inicio',            icon: LayoutDashboard },
-  { to: '/nuevo-justificante', label: 'Nuevo Justificante', icon: FilePlus2 },
-  { to: '/alumnos',         label: 'Alumnos',           icon: Users },
+  { to: '/',                   label: 'Inicio',             icon: LayoutDashboard },
+  { to: '/nuevo-justificante', label: 'Nuevo Justificante', icon: FilePlus2       },
+  { to: '/alumnos',            label: 'Alumnos',            icon: Users           },
 ];
 
 export default function Sidebar() {
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate('/login', { replace: true });
+  };
+
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
@@ -35,6 +43,10 @@ export default function Sidebar() {
       <div className="sidebar-footer">
         <p className="sidebar-footer-text">Sistema de Gestión</p>
         <p className="sidebar-footer-sub">Recepción · v1.0</p>
+        <button className="sidebar-logout" onClick={handleSignOut}>
+          <LogOut size={15} strokeWidth={1.75} />
+          Cerrar Sesión
+        </button>
       </div>
     </aside>
   );
