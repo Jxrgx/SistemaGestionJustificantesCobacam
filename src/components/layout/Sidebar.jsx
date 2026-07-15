@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, GraduationCap, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, LogOut } from 'lucide-react';
 import { supabase } from '../../services/supabase';
 
 const navItems = [
@@ -18,8 +18,11 @@ export default function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
-        <GraduationCap size={28} strokeWidth={1.75} />
-        <span>COBACAM</span>
+        <img
+          src="/logo-cobacam.png"
+          alt="Logotipo COBACAM"
+          className="sidebar-logo"
+        />
       </div>
 
       <nav className="sidebar-nav">

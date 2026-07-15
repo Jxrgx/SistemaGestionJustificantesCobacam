@@ -58,14 +58,15 @@ body { background: var(--main-bg); }
 
 .sidebar-brand {
   display: flex;
-  align-items: center;
-  gap: .625rem;
-  padding: 1.375rem 1.25rem 1.125rem;
-  color: var(--sidebar-text-h);
-  font-weight: 700;
-  font-size: 1rem;
-  letter-spacing: .025em;
+  justify-content: center;
+  padding: 1.25rem 1.25rem 1rem;
   border-bottom: 1px solid rgba(255,255,255,.06);
+}
+
+.sidebar-logo {
+  width: 7.5rem;
+  display: block;
+  object-fit: contain;
 }
 
 .sidebar-section-label {
@@ -677,6 +678,9 @@ body { background: var(--main-bg); }
 
 /* ─── Página de Login ────────────────────────────────────── */
 .login-page {
+  /* width:100% necesario porque #root es display:flex y sin él .login-page
+     solo ocupa el ancho de su contenido, arrinconado a la izquierda */
+  width: 100%;
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -704,16 +708,11 @@ body { background: var(--main-bg); }
   margin-bottom: .25rem;
 }
 
-.login-brand-icon {
-  width: 3.5rem;
-  height: 3.5rem;
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-  border-radius: 1rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  margin-bottom: .875rem;
+.login-logo {
+  width: 9rem;
+  display: block;
+  margin: 0 auto .75rem;
+  object-fit: contain;
 }
 
 .login-title {

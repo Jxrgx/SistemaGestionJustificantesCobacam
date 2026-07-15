@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GraduationCap, Loader2, XCircle } from 'lucide-react';
+import { Loader2, XCircle } from 'lucide-react';
 import { supabase } from '../services/supabase';
 
 export default function Login() {
@@ -39,9 +39,11 @@ export default function Login() {
 
         {/* Marca / Logo */}
         <div className="login-brand">
-          <div className="login-brand-icon">
-            <GraduationCap size={32} strokeWidth={1.5} />
-          </div>
+          <img
+            src="/logo-cobacam.png"
+            alt="Logotipo COBACAM"
+            className="login-logo"
+          />
           <h1 className="login-title">COBACAM</h1>
           <p className="login-subtitle">Sistema de Gestión de Justificantes</p>
         </div>
