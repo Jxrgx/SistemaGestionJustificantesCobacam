@@ -1,11 +1,10 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, FilePlus2, Users, GraduationCap, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, GraduationCap, LogOut } from 'lucide-react';
 import { supabase } from '../../services/supabase';
 
 const navItems = [
-  { to: '/',                   label: 'Inicio',             icon: LayoutDashboard },
-  { to: '/nuevo-justificante', label: 'Nuevo Justificante', icon: FilePlus2       },
-  { to: '/alumnos',            label: 'Alumnos',            icon: Users           },
+  { to: '/',        label: 'Inicio',  icon: LayoutDashboard },
+  { to: '/alumnos', label: 'Alumnos', icon: Users           },
 ];
 
 export default function Sidebar() {

@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
 import { FileCheck2, Clock, AlertCircle, TrendingUp, Loader2, Download } from 'lucide-react';
+import ModalNuevoJustificante from '../components/ModalNuevoJustificante';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { supabase } from '../services/supabase';
@@ -22,45 +22,47 @@ const fmtHora = (iso) => {
 
 // ══════════════════════════════════════════════════════════════
 export default function Dashboard() {
-  const [justificantes,  setJustificantes] = useState([]);
-  const [isLoading,      setIsLoading]     = useState(true);
-  const [filtroSemestre, setFiltroSemestre] = useState('Todos');
-  const [filtroGrupo,    setFiltroGrupo]    = useState('Todos');
+  const [justificantes,             setJustificantes]            = useState([]);
+  const [isLoading,                 setIsLoading]                = useState(true);
+  const [filtroSemestre,            setFiltroSemestre]           = useState('Todos');
+  const [filtroGrupo,               setFiltroGrupo]              = useState('Todos');
+  const [isModalJustificanteOpen,   setIsModalJustificanteOpen]  = useState(false);
 
   const today = new Date().toLocaleDateString('es-MX', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   });
 
   // ── Carga de justificantes del día ───────────────────────────
-  useEffect(() => {
-    async function cargar() {
-      setIsLoading(true);
+  // useCallback permite pasarla como onSuccess al modal sin recrearla en cada render
+  const cargar = useCallback(async () => {
+    setIsLoading(true);
 
-      // Límites del día en hora local → convertidos a UTC para la consulta.
-      // Esto evita que el reinicio del día ocurra a las 18:00 CST (medianoche UTC).
-      const startOfDay = new Date();
-      startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date();
-      endOfDay.setHours(23, 59, 59, 999);
+    // Límites del día en hora local → convertidos a UTC para la consulta.
+    // Esto evita que el reinicio del día ocurra a las 18:00 CST (medianoche UTC).
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
 
-      const { data, error } = await supabase
-        .from('justificantes')
-        .select('*, alumnos(nombre_completo, matricula, semestre, grupo)')
-        .gte('created_at', startOfDay.toISOString())
-        .lte('created_at', endOfDay.toISOString())
-        .order('created_at', { ascending: false });
+    const { data, error } = await supabase
+      .from('justificantes')
+      .select('*, alumnos(nombre_completo, matricula, semestre, grupo)')
+      .gte('created_at', startOfDay.toISOString())
+      .lte('created_at', endOfDay.toISOString())
+      .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('[Supabase] Dashboard:', error.message);
-      } else {
-        setJustificantes(data ?? []);
-      }
-
-      setIsLoading(false);
+    if (error) {
+      console.error('[Supabase] Dashboard:', error.message);
+    } else {
+      setJustificantes(data ?? []);
     }
 
-    cargar();
+    setIsLoading(false);
   }, []);
+
+  useEffect(() => {
+    cargar();
+  }, [cargar]);
 
   // Resetea el grupo al cambiar de semestre para evitar filtros cruzados inválidos
   useEffect(() => {
@@ -213,6 +215,11 @@ export default function Dashboard() {
   // ── Render ───────────────────────────────────────────────────
   return (
     <div className="page">
+      <ModalNuevoJustificante
+        isOpen={isModalJustificanteOpen}
+        onClose={() => setIsModalJustificanteOpen(false)}
+        onSuccess={cargar}
+      />
 
       {/* Encabezado */}
       <div className="page-header">
@@ -274,9 +281,12 @@ export default function Dashboard() {
             Descargar Reporte (PDF)
           </button>
 
-          <Link to="/nuevo-justificante" className="btn btn-primary">
+          <button
+            className="btn btn-primary"
+            onClick={() => setIsModalJustificanteOpen(true)}
+          >
             + Nuevo Justificante
-          </Link>
+          </button>
         </div>
       </div>
 
