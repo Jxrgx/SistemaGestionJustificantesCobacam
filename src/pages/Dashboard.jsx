@@ -1,11 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FileCheck2, Clock, AlertCircle, TrendingUp, Loader2, Download } from 'lucide-react';
+import { FileCheck2, HeartPulse, User, TrendingUp, Loader2, Download } from 'lucide-react';
 import ModalNuevoJustificante from '../components/ModalNuevoJustificante';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { supabase } from '../services/supabase';
 
-// ─── Helpers de formato ────────────────────────────────────────
 const fmtFecha = (str) => {
   if (!str) return '—';
   return new Date(`${str}T00:00:00`).toLocaleDateString('es-MX', {
@@ -27,34 +26,49 @@ export default function Dashboard() {
   const [filtroSemestre,            setFiltroSemestre]           = useState('Todos');
   const [filtroGrupo,               setFiltroGrupo]              = useState('Todos');
   const [isModalJustificanteOpen,   setIsModalJustificanteOpen]  = useState(false);
+  const [totalEsteMes,              setTotalEsteMes]             = useState(0);
 
   const today = new Date().toLocaleDateString('es-MX', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   });
 
-  // ── Carga de justificantes del día ───────────────────────────
-  // useCallback permite pasarla como onSuccess al modal sin recrearla en cada render
   const cargar = useCallback(async () => {
     setIsLoading(true);
 
-    // Límites del día en hora local → convertidos a UTC para la consulta.
-    // Esto evita que el reinicio del día ocurra a las 18:00 CST (medianoche UTC).
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
 
-    const { data, error } = await supabase
-      .from('justificantes')
-      .select('*, alumnos(nombre_completo, matricula, semestre, grupo)')
-      .gte('created_at', startOfDay.toISOString())
-      .lte('created_at', endOfDay.toISOString())
-      .order('created_at', { ascending: false });
+    const startOfMonth = new Date(startOfDay.getFullYear(), startOfDay.getMonth(), 1);
+    startOfMonth.setHours(0, 0, 0, 0);
+    const endOfMonth = new Date(startOfDay.getFullYear(), startOfDay.getMonth() + 1, 0);
+    endOfMonth.setHours(23, 59, 59, 999);
+
+    const [{ data, error }, { count, error: errorMes }] = await Promise.all([
+      supabase
+        .from('justificantes')
+        .select('*, alumnos(nombre_completo, matricula, semestre, grupo)')
+        .gte('created_at', startOfDay.toISOString())
+        .lte('created_at', endOfDay.toISOString())
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('justificantes')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', startOfMonth.toISOString())
+        .lte('created_at', endOfMonth.toISOString()),
+    ]);
 
     if (error) {
       console.error('[Supabase] Dashboard:', error.message);
     } else {
       setJustificantes(data ?? []);
+    }
+
+    if (errorMes) {
+      console.error('[Supabase] Dashboard (mes):', errorMes.message);
+    } else {
+      setTotalEsteMes(count ?? 0);
     }
 
     setIsLoading(false);
@@ -64,21 +78,23 @@ export default function Dashboard() {
     cargar();
   }, [cargar]);
 
-  // Resetea el grupo al cambiar de semestre para evitar filtros cruzados inválidos
   useEffect(() => {
     setFiltroGrupo('Todos');
   }, [filtroSemestre]);
 
   const total = justificantes.length;
 
-  // Genera dinámicamente los grupos del semestre seleccionado: 101-107, 201-207, etc.
+  const totalSalud = justificantes.filter((j) =>
+    /enfermedad|médica/i.test(j.motivo ?? '')
+  ).length;
+  const totalPersonales = total - totalSalud;
+
   const gruposDelSemestre = filtroSemestre === 'Todos'
     ? []
     : Array.from({ length: 7 }, (_, i) => `${filtroSemestre}0${i + 1}`);
 
   const justificantesFiltrados = justificantes.filter((j) => {
     if (filtroSemestre !== 'Todos') {
-      // Normaliza '1°' → '1' para compatibilidad con los datos almacenados
       const semDB = (j.alumnos?.semestre ?? '').replace('°', '').trim();
       if (semDB !== filtroSemestre) return false;
     }
@@ -88,7 +104,6 @@ export default function Dashboard() {
 
   const hayFiltros = filtroSemestre !== 'Todos' || filtroGrupo !== 'Todos';
 
-  // ── Exportar a PDF ───────────────────────────────────────────
   const exportarPDF = () => {
     const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'letter' });
 
@@ -100,7 +115,6 @@ export default function Dashboard() {
     });
     const fechaArchivo = new Date().toISOString().slice(0, 10);
 
-    // Título dinámico según filtros activos
     const contextoFiltro = [
       filtroSemestre !== 'Todos' && `Semestre ${filtroSemestre}`,
       filtroGrupo    !== 'Todos' && `Grupo ${filtroGrupo}`,
@@ -115,7 +129,6 @@ export default function Dashboard() {
       ? `Total: ${totalFiltrado} de ${total} registros   ·   Filtro: ${contextoFiltro}`
       : `Total de registros: ${totalFiltrado}`;
 
-    // ── Encabezado del documento ─────────────────────────────
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(15);
     doc.setTextColor(30, 41, 59);           // #1e293b
@@ -129,7 +142,6 @@ export default function Dashboard() {
       14, 25,
     );
 
-    // ── Nota de confidencialidad ─────────────────────────────
     doc.setFontSize(7.5);
     doc.setTextColor(148, 163, 184);        // #94a3b8
     doc.text(
@@ -137,15 +149,10 @@ export default function Dashboard() {
       14, 31,
     );
 
-    // ── Línea divisoria ──────────────────────────────────────
     doc.setDrawColor(226, 232, 240);        // #e2e8f0
     doc.setLineWidth(0.3);
     doc.line(14, 34, doc.internal.pageSize.getWidth() - 14, 34);
 
-    // ── Tabla ────────────────────────────────────────────────
-    // FILTRO ÉTICO — columnas del PDF estrictamente académicas y neutras.
-    // Se excluyen deliberadamente "motivo" y "observaciones" para proteger
-    // la privacidad de los menores. NO agregar esos campos aquí.
     const columnas = [
       { header: 'Matrícula',         dataKey: 'matricula'    },
       { header: 'Nombre del Alumno', dataKey: 'nombre'       },
@@ -192,7 +199,6 @@ export default function Dashboard() {
         4: { cellWidth: 35 },              // Fecha inicio
         5: { cellWidth: 35 },              // Fecha fin
       },
-      // Pie de página con numeración
       didDrawPage: ({ pageNumber }) => {
         const pageW = doc.internal.pageSize.getWidth();
         const pageH = doc.internal.pageSize.getHeight();
@@ -212,7 +218,6 @@ export default function Dashboard() {
     doc.save(`justificantes_${fechaArchivo}.pdf`);
   };
 
-  // ── Render ───────────────────────────────────────────────────
   return (
     <div className="page">
       <ModalNuevoJustificante
@@ -292,8 +297,8 @@ export default function Dashboard() {
 
       {/* ── Tarjetas de métricas ── */}
       <div className="metrics-grid">
-        <div className="metric-card">
-          <div className="metric-icon" style={{ backgroundColor: '#3b82f618', color: '#3b82f6' }}>
+        <div className="metric-card" style={{ '--card-accent': 'var(--brand)' }}>
+          <div className="metric-icon" style={{ backgroundColor: 'var(--brand-tint)', color: 'var(--brand)' }}>
             <FileCheck2 size={22} strokeWidth={1.75} />
           </div>
           <div>
@@ -308,16 +313,21 @@ export default function Dashboard() {
         </div>
 
         {[
-          { label: 'Pendientes',     color: '#f59e0b', Icon: Clock       },
-          { label: 'Con incidencia', color: '#ef4444', Icon: AlertCircle },
-          { label: 'Este mes',       color: '#10b981', Icon: TrendingUp  },
-        ].map(({ label, color, Icon }) => (
-          <div key={label} className="metric-card">
+          { label: 'Motivo de Salud',    color: '#0ea5e9', Icon: HeartPulse, value: totalSalud      },
+          { label: 'Motivos Personales', color: '#8b5cf6', Icon: User,       value: totalPersonales  },
+          { label: 'Este mes',           color: '#10b981', Icon: TrendingUp, value: totalEsteMes     },
+        ].map(({ label, color, Icon, value }) => (
+          <div key={label} className="metric-card" style={{ '--card-accent': color }}>
             <div className="metric-icon" style={{ backgroundColor: `${color}18`, color }}>
               <Icon size={22} strokeWidth={1.75} />
             </div>
             <div>
-              <p className="metric-value">—</p>
+              <p className="metric-value">
+                {isLoading
+                  ? <Loader2 size={18} className="spin" style={{ color: '#94a3b8' }} />
+                  : value
+                }
+              </p>
               <p className="metric-label">{label}</p>
             </div>
           </div>

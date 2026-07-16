@@ -6,7 +6,6 @@ import {
 } from 'lucide-react';
 import { supabase } from '../services/supabase';
 
-// ─── Constantes ────────────────────────────────────────────────
 const MOTIVOS = [
   'Enfermedad / Cita médica',
   'Asunto familiar',
@@ -26,7 +25,6 @@ const addDays = (dateStr, n) => {
   return d.toISOString().slice(0, 10);
 };
 
-// ─── Estilos react-select con soporte de estado error ──────────
 const getRsStyles = (hasError = false) => ({
   control: (base, { isFocused }) => ({
     ...base,
@@ -66,16 +64,13 @@ const getRsStyles = (hasError = false) => ({
 });
 
 // ══════════════════════════════════════════════════════════════
-// Props: isOpen (bool), onClose (fn), onSuccess (fn)
 export default function ModalNuevoJustificante({ isOpen, onClose, onSuccess }) {
-  // ── Estado: formulario principal ─────────────────────────────
   const [alumno,    setAlumno]    = useState(null);
   const [form,      setForm]      = useState(FORM_VACIO);
   const [errors,    setErrors]    = useState({});
   const [guardando, setGuardando] = useState(false);
   const [alerta,    setAlerta]    = useState(null);
 
-  // ── Estado: modal anidado "Registrar Nuevo Alumno" ───────────
   const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
   const [modalNombre,        setModalNombre]        = useState('');
   const [modalMatricula,     setModalMatricula]     = useState('');
@@ -84,7 +79,6 @@ export default function ModalNuevoJustificante({ isOpen, onClose, onSuccess }) {
   const [modalErrors,        setModalErrors]        = useState({});
   const [guardandoAlumno,    setGuardandoAlumno]    = useState(false);
 
-  // Limpia todo el formulario cada vez que el modal se abre
   useEffect(() => {
     if (isOpen) {
       setAlumno(null);
@@ -100,7 +94,6 @@ export default function ModalNuevoJustificante({ isOpen, onClose, onSuccess }) {
     }
   }, [isOpen]);
 
-  // Helper: actualiza campo + limpia su error
   const set = (campo) => (e) => {
     setForm((p) => ({ ...p, [campo]: e.target.value }));
     if (errors[campo]) setErrors((p) => ({ ...p, [campo]: '' }));
@@ -116,7 +109,6 @@ export default function ModalNuevoJustificante({ isOpen, onClose, onSuccess }) {
     setErrors((p) => ({ ...p, fechaInicio: '', fechaFin: '' }));
   };
 
-  // ── Búsqueda asíncrona de alumnos ────────────────────────────
   const buscarAlumnos = async (inputValue) => {
     if (!inputValue || inputValue.trim().length < 2) return [];
 
@@ -140,7 +132,6 @@ export default function ModalNuevoJustificante({ isOpen, onClose, onSuccess }) {
     if (errors.alumno) setErrors((p) => ({ ...p, alumno: '' }));
   };
 
-  // ── Modal anidado: abrir / cerrar ────────────────────────────
   const handleAbrirModalAlumno = (inputValue) => {
     setModalNombre(inputValue.trim());
     setModalMatricula('');
@@ -155,7 +146,6 @@ export default function ModalNuevoJustificante({ isOpen, onClose, onSuccess }) {
     setIsStudentModalOpen(false);
   };
 
-  // ── Modal anidado: guardar alumno ─────────────────────────────
   const handleGuardarAlumno = async () => {
     const errs = {};
     if (!modalNombre.trim())    errs.nombre    = 'El nombre es obligatorio.';
@@ -196,7 +186,6 @@ export default function ModalNuevoJustificante({ isOpen, onClose, onSuccess }) {
     }
   };
 
-  // ── Formulario: validar y guardar justificante ────────────────
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -229,8 +218,8 @@ export default function ModalNuevoJustificante({ isOpen, onClose, onSuccess }) {
 
       if (error) throw new Error(error.message);
 
-      onSuccess(); // refresca la tabla del Dashboard
-      onClose();   // cierra este modal
+      onSuccess(); 
+      onClose();  
 
     } catch (err) {
       console.error('[Supabase]', err);
@@ -240,7 +229,6 @@ export default function ModalNuevoJustificante({ isOpen, onClose, onSuccess }) {
     }
   };
 
-  // Los hooks terminan aquí — el early return es válido después de ellos
   if (!isOpen) return null;
 
   return (

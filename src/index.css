@@ -2,12 +2,17 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
+  /* Paleta institucional (Guinda/Tinto) */
+  --brand:            #7A1C30;
+  --brand-dark:       #5e1525;
+  --brand-tint:        rgba(122, 28, 48, .10);
+
   /* Paleta */
-  --sidebar-bg:       #1e293b;
-  --sidebar-hover:    #334155;
-  --sidebar-active:   #3b82f6;
-  --sidebar-text:     #94a3b8;
-  --sidebar-text-h:   #f1f5f9;
+  --sidebar-bg:       #2b0a13;
+  --sidebar-hover:    #431521;
+  --sidebar-active:   var(--brand);
+  --sidebar-text:     #b9a3a8;
+  --sidebar-text-h:   #f8f3f4;
 
   --main-bg:          #f8fafc;
   --card-bg:          #ffffff;
@@ -21,6 +26,7 @@
   --blue-600:         #2563eb;
   --shadow-sm:        0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
   --shadow-md:        0 4px 16px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04);
+  --shadow-card:      0 2px 10px -3px rgba(15, 23, 42, .10), 0 1px 2px rgba(15, 23, 42, .04);
   --radius:           .625rem;
 
   font-family: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
@@ -67,6 +73,9 @@ body { background: var(--main-bg); }
   width: 7.5rem;
   display: block;
   object-fit: contain;
+  padding: .625rem;
+  border-radius: .75rem;
+  background: rgba(255,255,255,.06);
 }
 
 .sidebar-section-label {
@@ -167,12 +176,13 @@ body { background: var(--main-bg); }
 .metric-card {
   background: var(--card-bg);
   border: 1px solid var(--border);
+  border-top: 4px solid var(--card-accent, var(--brand));
   border-radius: var(--radius);
   padding: 1.125rem 1.25rem;
   display: flex;
   align-items: center;
   gap: .875rem;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-card);
 }
 
 .metric-icon {
@@ -186,9 +196,10 @@ body { background: var(--main-bg); }
 }
 
 .metric-value {
-  font-size: 1.625rem;
-  font-weight: 700;
-  color: var(--text-primary);
+  font-size: 2.25rem;
+  font-weight: 300;
+  letter-spacing: -.02em;
+  color: #1f2937;
   line-height: 1;
 }
 
@@ -362,11 +373,11 @@ body { background: var(--main-bg); }
 }
 
 .btn-primary {
-  background: var(--blue-500);
+  background: var(--brand);
   color: #fff;
-  border-color: var(--blue-500);
+  border-color: var(--brand);
 }
-.btn-primary:hover { background: var(--blue-600); border-color: var(--blue-600); }
+.btn-primary:hover { background: var(--brand-dark); border-color: var(--brand-dark); }
 
 .btn-ghost {
   background: transparent;
@@ -608,11 +619,11 @@ body { background: var(--main-bg); }
   text-align: left;
   font-size: .75rem;
   font-weight: 600;
-  letter-spacing: .04em;
+  letter-spacing: .07em;
   text-transform: uppercase;
   color: var(--text-secondary);
   padding: .625rem 1.25rem;
-  background: #f8fafc;
+  background: rgba(248, 250, 252, .5);
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
 }
@@ -622,6 +633,7 @@ body { background: var(--main-bg); }
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
   color: var(--text-primary);
+  transition: background-color .15s;
 }
 
 .data-table tbody tr:last-child td {
